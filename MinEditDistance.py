@@ -28,7 +28,9 @@ from numpy import zeros
 
 class MinEditDistance():
     
-    def __init__(self, insert_cost = 1, delete_cost = 1, substitute_cost = 2):
+    def __init__(self, insert_cost = 1, 
+                       delete_cost = 1, 
+                       substitute_cost = 2):
         self.i = insert_cost
         self.d = delete_cost
         self.s = substitute_cost
@@ -48,19 +50,70 @@ class MinEditDistance():
                                     (M[i-1, j-1] + 0 if source[i-1] == target[j-1] else M[i-1, j-1] + self.s, (i-1, j-1)),#source[i-1] rather source[i] because max(i) = len(source) + 1, to get correct current char in the string, need i - 1
                                     (M[i, j-1] + self.i, (i, j-1)))
                 B[i, j] = prev
-        print('Cost matrix:\n{}\nBacktrace matrix:\n{}\nMin cost: {}'.format(M, B, M[m-1, n-1]))
+        print('Cost matrix:\n{}\n\nBacktrace matrix:\n{}\n\nMin cost: {}\n'.format(M, B, M[m-1, n-1]))
         src, tgt = self.alignment("", "", source, target, *B[len(source), len(target)], len(source), len(target), B)
         print('Source: {}\nTarget: {}'.format(src, tgt))
         return M, B
     
-    def alignment(self, src, tgt, source, target, i, j, m, n, B): #[i, j] is the best previous cell of [m, n]
-        if m == 0 and n == 0: return src[::-1], tgt[::-1]
-        if i + 1 == m and j + 1 == n: src += source[m-1]; tgt += target[n-1] #from left upper corner, replace
-        elif i == m and j + 1 == n: src += '_'; tgt += target[n-1]         #from left, insert
-        elif i + 1 == m and j == n: src += source[m-1]; tgt += '_'         #from above, delete
+    def alignment(self, src, tgt,        #the result strings to show alignment
+                        source, target,  #the input source and target strings
+                        i, j,            #[i, j] is the best previous cell of [m, n]
+                        m, n, 
+                        B): 
+        if m == 0 and n == 0:            #the x and y-axis are all (0, 0) along, reach this means reach the beginning
+            return src[::-1], tgt[::-1]
+        if i + 1 == m and j + 1 == n:    #from left upper corner, replace
+            src += source[m-1] 
+            tgt += target[n-1] 
+        elif i == m and j + 1 == n:      #from left, insert to src, relative src position is empty at first place
+            src += '_'
+            tgt += target[n-1]         
+        elif i + 1 == m and j == n:      #from above, delete from src, relative tgt position is empty at first place
+            src += source[m-1]
+            tgt += '_'         
         return self.alignment(src, tgt, source, target, *B[i, j], i, j, B)
         
         
     
 med = MinEditDistance()
 med.getCost("intention", "execution")
+
+'''
+[Java]
+static int editDistDP(String str1, String str2, int m, int n)
+    {
+        // Create a table to store results of subproblems
+        int dp[][] = new int[m+1][n+1];
+      
+        // Fill d[][] in bottom up manner
+        for (int i=0; i<=m; i++)
+        {
+            for (int j=0; j<=n; j++)
+            {
+                // If first string is empty, only option is to
+                // isnert all characters of second string
+                if (i==0)
+                    dp[i][j] = j;  // Min. operations = j
+      
+                // If second string is empty, only option is to
+                // remove all characters of second string
+                else if (j==0)
+                    dp[i][j] = i; // Min. operations = i
+      
+                // If last characters are same, ignore last char
+                // and recur for remaining string
+                else if (str1.charAt(i-1) == str2.charAt(j-1))
+                    dp[i][j] = dp[i-1][j-1];
+      
+                // If last character are different, consider all
+                // possibilities and find minimum
+                else
+                    dp[i][j] = 1 + min(dp[i][j-1],  // Insert
+                                       dp[i-1][j],  // Remove
+                                       dp[i-1][j-1]); // Replace
+            }
+        }
+  
+        return dp[m][n];
+    }
+'''
