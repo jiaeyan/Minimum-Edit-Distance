@@ -35,23 +35,26 @@ class MinEditDistance():
         self.d = delete_cost
         self.s = substitute_cost
         
-    def getCost(self, source = None, target = None):
+    def mincost(self, source = None, target = None):
         m = len(source) + 1
-        n = len(target) + 1
-        M = zeros((m, n))                      #additional 1 is for 0 len for each string
-        B = zeros(M.shape, dtype = 'int, int') #backpointer matrix
-        for i in range(1, m):
-            M[i, 0] = M[i-1, 0] + self.d
-        for j in range(1, n):
-            M[0, j] = M[0, j-1] + self.i
-        for i in range(1, m):
-            for j in range(1, n):
-                M[i, j], prev = min((M[i-1, j] + self.d, (i-1, j)),
-                                    (M[i-1, j-1] + 0 if source[i-1] == target[j-1] else M[i-1, j-1] + self.s, (i-1, j-1)),#source[i-1] rather source[i] because max(i) = len(source) + 1, to get correct current char in the string, need i - 1
-                                    (M[i, j-1] + self.i, (i, j-1)))
-                B[i, j] = prev
+        n = len(target) + 1                       #additional 1 is for 0 len for each string
+        M = zeros((m, n))                      
+        B = zeros(M.shape, dtype = 'int, int')    #backpointer matrix
+        for i in range(m):
+            for j in range(n):
+                if i == 0:
+                    M[0, j] = j
+                elif j == 0:
+                    M[i, 0] = i
+                elif source[i-1] == target[j-1]:  #source[i-1] rather source[i] because max(i) = len(source) + 1, to get correct current char in the string, need i - 1
+                    M[i, j] = M[i-1, j-1]
+                    B[i, j] = (i-1, j-1)
+                else:
+                    M[i, j], B[i, j] = min((M[i-1, j] + self.d, (i-1, j)),
+                                           (M[i-1, j-1] + self.s, (i-1, j-1)),
+                                           (M[i, j-1] + self.i, (i, j-1)))
         print('Cost matrix:\n{}\n\nBacktrace matrix:\n{}\n\nMin cost: {}\n'.format(M, B, M[m-1, n-1]))
-        src, tgt = self.alignment("", "", source, target, *B[len(source), len(target)], len(source), len(target), B)
+        src, tgt = self.alignment("", "", source, target, *B[m-1, n-1], m-1, n-1, B)  #not m, n because m-1, n-1 are max indices of matrices
         print('Source: {}\nTarget: {}'.format(src, tgt))
         return M, B
     
@@ -76,44 +79,4 @@ class MinEditDistance():
         
     
 med = MinEditDistance()
-med.getCost("intention", "execution")
-
-'''
-[Java]
-static int editDistDP(String str1, String str2, int m, int n)
-    {
-        // Create a table to store results of subproblems
-        int dp[][] = new int[m+1][n+1];
-      
-        // Fill d[][] in bottom up manner
-        for (int i=0; i<=m; i++)
-        {
-            for (int j=0; j<=n; j++)
-            {
-                // If first string is empty, only option is to
-                // isnert all characters of second string
-                if (i==0)
-                    dp[i][j] = j;  // Min. operations = j
-      
-                // If second string is empty, only option is to
-                // remove all characters of second string
-                else if (j==0)
-                    dp[i][j] = i; // Min. operations = i
-      
-                // If last characters are same, ignore last char
-                // and recur for remaining string
-                else if (str1.charAt(i-1) == str2.charAt(j-1))
-                    dp[i][j] = dp[i-1][j-1];
-      
-                // If last character are different, consider all
-                // possibilities and find minimum
-                else
-                    dp[i][j] = 1 + min(dp[i][j-1],  // Insert
-                                       dp[i-1][j],  // Remove
-                                       dp[i-1][j-1]); // Replace
-            }
-        }
-  
-        return dp[m][n];
-    }
-'''
+med.mincost("intention", "execution")
