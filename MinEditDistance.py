@@ -58,7 +58,7 @@ class MinEditDistance():
     
     def alignment(self, src, tgt,        #the result strings to show alignment
                         source, target,  #the input source and target strings
-                        i, j,            #[i, j] is the best previous cell of [m, n]
+                        i, j,            #[i, j] is the best previous cell of current cell [m, n]
                         m, n, 
                         B): 
         if m == 0 and n == 0:            #the x and y-axis are all (0, 0) along, reach this means reach the beginning
