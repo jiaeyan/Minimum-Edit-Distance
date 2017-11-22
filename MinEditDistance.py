@@ -34,7 +34,7 @@ class MinEditDistance():
         self.i = insert_cost
         self.d = delete_cost
         self.s = substitute_cost
-        
+
     def mincost(self, source = None, target = None):
         m = len(source) + 1
         n = len(target) + 1                       #additional 1 is for 0 len for each string
@@ -43,15 +43,13 @@ class MinEditDistance():
         for i in range(m):
             for j in range(n):
                 if i == 0:
-                    M[0, j] = j
+                    M[i, j] = j
                 elif j == 0:
-                    M[i, 0] = i
-                elif source[i-1] == target[j-1]:  #source[i-1] rather source[i] because max(i) = len(source) + 1, to get correct current char in the string, need i - 1
-                    M[i, j] = M[i-1, j-1]
-                    B[i, j] = (i-1, j-1)
+                    M[i, j] = i
                 else:
+                    sub_cost = 0 if source[i-1] == target[j-1] else self.s  #source[i-1] rather source[i] because max(i) = len(source) + 1, to get correct current char in the string, need i - 1
                     M[i, j], B[i, j] = min((M[i-1, j] + self.d, (i-1, j)),
-                                           (M[i-1, j-1] + self.s, (i-1, j-1)),
+                                           (M[i-1, j-1] + sub_cost, (i-1, j-1)),
                                            (M[i, j-1] + self.i, (i, j-1)))
         print('Cost matrix:\n{}\n\nBacktrace matrix:\n{}\n\nMin cost: {}\n'.format(M, B, M[m-1, n-1]))
         src, tgt = self.alignment("", "", source, target, *B[m-1, n-1], m-1, n-1, B)  #not m, n because m-1, n-1 are max indices of matrices
